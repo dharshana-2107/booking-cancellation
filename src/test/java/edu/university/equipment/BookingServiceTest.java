@@ -16,7 +16,32 @@ void cancellingUnknownBookingDoesNotChangeInventory() {
 
     assertEquals(10, service.getEquipment("LAPTOP01").getAvailableQuantity());
 }
- @Test void cancellationRestoresInventoryOnce(){Booking b=service.create("STU1001","TABLET01",3);service.cancel(b.getId());assertEquals(8,service.getEquipment("TABLET01").getAvailableQuantity());assertThrows(IllegalStateException.class,()->service.cancel(b.getId()));}
+ @Test
+void successfulCancellationRestoresInventoryAndUpdatesStatus() {
+    Booking booking = service.create("STU1001", "TABLET01", 3);
+
+    assertEquals(5, service.getEquipment("TABLET01").getAvailableQuantity());
+
+    Booking cancelled = service.cancel(booking.getId());
+
+    assertEquals("CANCELLED", cancelled.getStatus());
+    assertEquals(8, service.getEquipment("TABLET01").getAvailableQuantity());
+}
+
+@Test
+void repeatedCancellationDoesNotRestoreInventoryAgain() {
+    Booking booking = service.create("STU1001", "TABLET01", 3);
+
+    service.cancel(booking.getId());
+
+    assertThrows(
+        IllegalStateException.class,
+        () -> service.cancel(booking.getId())
+    );
+
+    assertEquals("CANCELLED", booking.getStatus());
+    assertEquals(8, service.getEquipment("TABLET01").getAvailableQuantity());
+}
 @Test
 void bookingExactlyAvailableInventoryIsAccepted() {
     Booking booking = service.create("STU1001", "PROJECTOR01", 4);
